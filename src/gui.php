@@ -165,7 +165,7 @@ function list_files($dir) {
                     // iframe を生成してオブジェクトURLを src に設定
                     viewer.innerHTML = '<iframe src="' + url + '"></iframe>';
                 })
-                .catch(err => {
+                .catch(() => {
                     viewer.innerHTML = '<p>Error loading markdown file.</p>';
                 });
         }
@@ -205,12 +205,12 @@ function list_files($dir) {
                         viewer.innerHTML = '<pre><code>' + escapedText + '</code></pre>';
                     }
                 })
-                .catch(err => {
+                .catch(() => {
                     viewer.innerHTML = '<p>Error loading text file.</p>';
                 });
         }
         else {
-            viewer.innerHTML = '<p>Preview not available for this file type.</p>';
+            viewer.innerHTML = '<p>Preview is not available for this file type.</p>';
 
             console.log("Preview not available for this file type. : " + fileExtension );
         }
