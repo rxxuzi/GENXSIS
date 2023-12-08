@@ -74,6 +74,7 @@ function list_files($dir) {
 
         #file-viewer pre,
         #file-viewer code {
+            font-family: 'Courier New', monospace;
             word-wrap: break-word;
             white-space: pre-wrap;
             padding: 5px;
@@ -109,26 +110,45 @@ function list_files($dir) {
 <body>
 <main>
     <div id="file-explorer">
-        <!-- ファイルエクスプローラーのUIをここに構築 -->
         <?php
-        $current_dir = './'; // ここを動的に設定することも可能
+        $current_dir = './';
+        if (isset($_GET['dir']) && is_dir($_GET['dir'])) {
+            $current_dir = $_GET['dir'];
+        }
         $items = list_files($current_dir);
         if (count($items) > 0) {
             echo "<ul>";
+
+            if ($current_dir != './') {
+                $parent_dir = dirname($current_dir);
+                echo "<li onclick='viewDirectory(\"" . htmlspecialchars($parent_dir) . "\")'>..</li>";
+            }
+
             foreach ($items as $item) {
-                // ファイルの種類に基づいてスタイルを適用
                 $style = $item['type'] == "folder" ? "font-weight: bold;" : "";
-                echo "<li onclick='viewFile(\"" . htmlspecialchars($item['name']) . "\")' style='" . $style . "'>" . htmlspecialchars($item['name']) . "</li>";
+                if ($item['type'] == "folder") {
+                    // フォルダの場合
+                    echo "<li onclick='viewDirectory(\"" . htmlspecialchars($current_dir . '/' . $item['name']) . "\")' style='" . $style . "'>" . htmlspecialchars($item['name']) . "</li>";
+                } else {
+                    // ファイルの場合
+                    echo "<li onclick='viewFile(\"" . htmlspecialchars($current_dir . '/' . $item['name']) . "\")' style='" . $style . "'>" . htmlspecialchars($item['name']) . "</li>";
+                }
             }
             echo "</ul>";
+
+
         } else {
             echo "<p>No files found in the current directory.</p>";
         }
         ?>
     </div>
     <div id="file-viewer"></div>
+    <script>
+        function viewDirectory(dirPath) {
+            window.location.href = '?dir=' + encodeURIComponent(dirPath);
+        }
+    </script>
 </main>
-
 <script>
     const textExtensions = ['txt', 'php', 'js', 'css', 'json', 'xml', 'sql', 'csv'];
     const codeExtensions = [
@@ -147,7 +167,6 @@ function list_files($dir) {
         // ファイル拡張子を取得
         const fileExtension = filename.split('.').pop();
 
-        console.log(filename);
         // html ファイルの場合、iframe を使用してそのまま表示
         if (fileExtension === 'html') {
             viewer.innerHTML = '<iframe src="' + filename + '"></iframe>';
