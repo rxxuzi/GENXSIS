@@ -1,6 +1,6 @@
 <?php
 
-function get_os_type(){
+function get_os_type(): string {
     if (stristr(PHP_OS, 'WIN')) {
         return 'win';
     } else {
@@ -8,81 +8,116 @@ function get_os_type(){
     }
 }
 
-function get_server_cpu_usage(){
+function get_server_cpu_usage() {
     if (get_os_type() == 'win') {
-        // Windowsの場合のCPU使用率取得処理
         $cpuUsage = shell_exec('wmic cpu get loadpercentage /Value');
-        $cpuUsage = explode("=", $cpuUsage)[1];
+        if ($cpuUsage !== null) {
+            $cpuUsage = explode("=", $cpuUsage)[1] ?? '';
+        } else {
+            $cpuUsage = '';
+        }
         return trim($cpuUsage);
     } else {
-        // Linuxの場合のCPU使用率取得処理
         $load = sys_getloadavg();
         return $load[0]; // 1分間の平均負荷
     }
 }
 
-function get_server_memory_usage(){
+function get_server_memory_usage() {
     if (get_os_type() == 'win') {
-        // Windowsの場合のメモリ使用率取得処理
         $memory = shell_exec('wmic OS get FreePhysicalMemory /Value');
         $totalMemory = shell_exec('wmic computersystem get TotalPhysicalMemory /Value');
-
-        $freeMemory = explode("=", $memory)[1];
-        $totalMemory = explode("=", $totalMemory)[1];
-
+        if ($memory !== null && $totalMemory !== null) {
+            $freeMemory = explode("=", $memory)[1] ?? '';
+            $totalMemory = explode("=", $totalMemory)[1] ?? '';
+        } else {
+            $freeMemory = $totalMemory = '';
+        }
+        $freeMemory = (float) $freeMemory;
+        $totalMemory = (float) $totalMemory;
     } else {
-        // Linuxの場合のメモリ使用率取得処理
         $meminfo = file_get_contents('/proc/meminfo');
         preg_match_all('/\w+:\s+(\d+)/', $meminfo, $matches);
         $meminfo = array_combine($matches[0], $matches[1]);
-
-        $totalMemory = $meminfo['MemTotal'];
-        $freeMemory = $meminfo['MemFree'] + $meminfo['Buffers'] + $meminfo['Cached'];
+        $totalMemory = (float) ($meminfo['MemTotal'] ?? 0);
+        $freeMemory = (float) ($meminfo['MemFree'] ?? 0) + ($meminfo['Buffers'] ?? 0) + ($meminfo['Cached'] ?? 0);
     }
-    return round((1 - $freeMemory / $totalMemory) * 100, 2);
+
+    if ($totalMemory != 0) {
+        return round((1 - $freeMemory / $totalMemory) * 100, 2);
+    } else {
+        return 0;
+    }
 }
 
-
-function get_server_disk_space(){
+function get_server_disk_space() {
     if (get_os_type() == 'win') {
-        // Windowsの場合のディスク使用率取得処理
         $diskSpace = shell_exec('wmic LogicalDisk Where DriveType="3" Get Size, FreeSpace /Value');
-        $diskSpace = explode("\n", $diskSpace);
+        if ($diskSpace !== null) {
+            $diskSpace = explode("\n", $diskSpace) ?? [];
+        } else {
+            $diskSpace = [];
+        }
         $totalSpace = 0;
         $freeSpace = 0;
-        foreach($diskSpace as $line){
-            if(strpos($line, "Size") !== false){
-                $totalSpace += explode("=", $line)[1];
+        foreach ($diskSpace as $line) {
+            if (strpos($line, "Size") !== false) {
+                $totalSpace += (float) (explode("=", $line)[1] ?? 0);
             }
-            if(strpos($line, "FreeSpace") !== false){
-                $freeSpace += explode("=", $line)[1];
+            if (strpos($line, "FreeSpace") !== false) {
+                $freeSpace += (float) (explode("=", $line)[1] ?? 0);
             }
         }
     } else {
-        // Linuxの場合のディスク使用率取得処理
         $diskSpace = shell_exec('df -P | grep -vE "^Filesystem|tmpfs|cdrom"');
         $lines = explode("\n", $diskSpace);
         $totalSpace = 0;
         $freeSpace = 0;
-        foreach($lines as $line){
+        foreach ($lines as $line) {
             $parts = preg_split('/\s+/', $line);
-            if(count($parts) > 1){
-                $totalSpace += $parts[1];
-                $freeSpace += $parts[3];
+            if (count($parts) > 1) {
+                $totalSpace += (float) ($parts[1] ?? 0);
+                $freeSpace += (float) ($parts[3] ?? 0);
             }
         }
     }
 
-    return round((1 - $freeSpace / $totalSpace) * 100, 2);
+    if ($totalSpace != 0) {
+        return round((1 - $freeSpace / $totalSpace) * 100, 2);
+    } else {
+        return 0;
+    }
 }
 
-function get_gpu_usage(){
-    $gpuUsage = shell_exec('nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader,nounits');
-    if ($gpuUsage === null) {
+function get_gpu_usage() {
+    // NVIDIA GPUの場合
+    if (is_nvidia_gpu()) {
+        $gpuUsage = shell_exec('nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader,nounits');
+    }
+    // AMD GPUの場合
+    else if (is_amd_gpu()) {
+        // AMDのGPU利用率を取得するコマンドを実行
+        $gpuUsage = shell_exec('rocm-smi --showuse');
+    }
+    else {
         return "N/A";
     }
+
     return trim($gpuUsage);
 }
+
+// NVIDIA GPUを使用しているかどうかを確認する関数
+function is_nvidia_gpu() {
+    $output = shell_exec('lspci | grep -i nvidia');
+    return !empty($output);
+}
+
+// AMD GPUを使用しているかどうかを確認する関数
+function is_amd_gpu() {
+    $output = shell_exec('lspci | grep -i amd');
+    return !empty($output);
+}
+
 
 function get_network_status(){
     $status = shell_exec('ping -n 1 google.com');
@@ -93,25 +128,7 @@ function get_network_status(){
     }
 }
 
-function get_list_files($dir, $indent = 0) {
-    $result = '';
-    if ($handle = opendir($dir)) {
-        while (false !== ($entry = readdir($handle))) {
-            if ($entry != "." && $entry != "..") {
-                $path = $dir . '/' . $entry;
-                $result .= str_repeat('&nbsp;', $indent * 4) . ' -' . $entry . '<br>';
-                if (is_dir($path)) {
-                    $result .= get_list_files($path, $indent + 1);
-                }
-            }
-        }
-        closedir($handle);
-    }
-    return $result;
-}
-
-
-function get_status_class_and_text($usage) {
+function get_status_class_and_text($usage): array {
     if ($usage === "N/A") {
         return ['unknown-usage', 'Unknown'];
     }
@@ -136,19 +153,32 @@ function get_server_process_list() {
     $processList = shell_exec('wmic process get description, processid /format:csv');
     $processes = explode("\n", $processList);
     array_shift($processes);  // ヘッダー行を削除
-
     $result = '<table class="process-list">';
-    $result .= '<tbody style="height: 500px; overflow-y: auto; display: block;">';
 
+    $trs = array();
+
+    $i = 0;
     foreach ($processes as $process) {
         if (trim($process) != "") {
             list($node, $description, $processId) = explode(",", $process);
-            $result .= "<tr style=\"display: table; width: 100%;\"><td>$description</td><td>$processId</td></tr>";
+            $trs[$i] = "<tr><td>$description</td><td>$processId</td></tr>";
+            $i++;
         }
     }
+
+    sort($trs);
+
+    $result .= '<thead style="width: 100%">';
+    $result .= '<tr><th>Description</th><th>Process ID</th></tr></thead>';
+    $result .= '<tbody style="height: 500px; overflow-y: auto; width: 100%">';
+    for ($j = 1 ; $j < count($trs) ; $j++){
+        $result .= $trs[$j];
+    }
     $result .= '</tbody></table>';
+
     return $result;
 }
+
 ?>
 
 
@@ -204,20 +234,10 @@ $ssid = trim(end($ssid));
             text-align: left;
             width: 50%;
         }
-        .process-list thead th {
-            position: sticky;
-            top: 0;
-            background-color: #f9f9f9;
-        }
-        .process-list tbody {
-            display: block;
-            height: 200px;
+        .scrollable-tbody {
+            height: 500px;
             overflow-y: auto;
-        }
-        .process-list tbody tr {
-            display: table;
             width: 100%;
-            table-layout: fixed;
         }
     </style>
 </head>
@@ -253,12 +273,18 @@ $ssid = trim(end($ssid));
             <td><?php $diskUsage = get_server_disk_space(); echo $diskUsage; ?>%</td>
             <?php print_status($diskUsage); ?>
         </tr>
+        <tr>
+            <td>GPU Usage</td>
+            <td><?php $gpuUsage = get_gpu_usage(); echo $gpuUsage; ?>%</td>
+            <?php print_status($gpuUsage); ?>
+        </tr>
     </tbody>
 </table>
 
 <h2>Process List</h2>
-<table>
+<div class="scrollable-tbody">
     <?php echo get_server_process_list(); ?>
-</table>
+</div>
+
 </body>
 </html>
