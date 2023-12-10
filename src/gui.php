@@ -21,6 +21,8 @@ function list_files($dir) {
             closedir($dh);
         }
     }
+    sort($folders);
+    sort($files);
     // フォルダを先に、その後にファイルをリストする
     return array_merge($folders, $files);
 }
