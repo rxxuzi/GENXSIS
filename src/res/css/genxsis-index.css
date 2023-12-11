@@ -1,0 +1,92 @@
+.blob {
+  background: rgb(0,232,255);
+  background: linear-gradient(90deg, rgb(0, 65, 71) 0%, rgba(188,0,243,1)  52%, rgba(188,0,243,1) 75%, rgba(154,21,244,1) 90%, rgba(188,0,243,1) 100%);
+  width: 700px;
+  height: 700px;
+  border-radius: 50%;
+  animation: rotate 20s infinite both;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  translate: -50% -50%;
+  filter: blur(50px) drop-shadow(0 0 50px #1c163b);
+  z-index: 2;
+
+  opacity: 0.8;
+}
+
+.hole {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: absolute;
+  top: 45%;
+  left: 50%;
+  translate: -50% -50%;
+  width: 600px;
+  height: 600px;
+  background-color: transparent;
+  filter: none;
+  z-index: 0;
+}
+
+.black-hole {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  translate: -50% -50%;
+  z-index: 99999;
+  background-color: black;
+  border-radius: 50%;
+  height: 45vh;
+  width: 45vh;
+  border: white 1px solid;
+  box-shadow: white 0 2.5px 10px;
+  filter: none;
+  animation: shadow 20s infinite both;
+}
+
+@keyframes shadow {
+  from {
+    rotate:0deg;
+  }
+  to {
+    rotate: 360deg;
+  }
+}
+
+@keyframes rotate {
+  from {
+    rotate: 0deg;
+    width: 500px;
+    height: 500px;
+    border-radius: 51% 50% 55% 52% / 51% 43% 68% 48%;
+  }
+  25% {
+    scale: 1.25 1;
+    width: 500px;
+    height: 500px;
+    border-radius: 51% 80% 25% 52% / 51% 43% 27% 48%;
+  }
+
+  50% {
+    scale: 1 1.25;
+    width: 350px;
+    height: 350px;
+    border-radius: 83% 60% 55% 22% / 67% 97% 65% 47%;
+  }
+
+  75% {
+    scale: 1.2 1.75;
+    width: 550px;
+    height: 550px;
+    border-radius: 81% 19% 55% 22% / 51% 63% 68% 98%;
+  }
+
+  to {
+    rotate: 360deg;
+    width: 500px;
+    height: 500px;
+    border-radius: 51% 50% 55% 52% / 51% 43% 68% 48%;
+  }
+}

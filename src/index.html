@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link href="https://fonts.googleapis.com/css?family=Orbitron" rel="stylesheet">
+    <link href="res/css/genxsis-index.css" rel="stylesheet">
+    <style>
+        :root {
+            --mouse-x: 0;
+            --mouse-y: 0;
+        }
+
+        body, html {
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            color: white;
+            font-family: 'Orbitron', sans-serif;
+
+            background: linear-gradient(45deg, black, #20184a, black);
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        main {
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 0 20px;
+            z-index: 2;
+        }
+
+        h1 {
+            margin: 0 auto;
+            padding: 0 20px;
+            font-size: 10vw;
+            text-transform: uppercase;
+            white-space: nowrap;
+            overflow: hidden;
+            text-shadow: 0 0 10px #0f0, 0 0 20px #0f0, 0 0 30px #0f0;
+        }
+
+        .links a {
+            font-size: 1.5em;
+            color: #08f;
+            text-decoration: none;
+            margin: 0 10px;
+            text-shadow: 0 0 5px #08f, 0 0 10px #08f;
+        }
+
+        .links a:hover {
+            color: #0ff;
+            text-shadow: 0 0 10px #0ff, 0 0 20px #0ff;
+        }
+
+    </style>
+</head>
+<body>
+    <main>
+        <h1 class="genxsis">GENXSIS</h1>
+        <div class="links">
+            <a href="gui.php">GUI</a>
+            <a href="genxsis.php">RAT</a>
+            <a href="status.php">STATUS</a>
+            <a href="wifi.php">NETWORK</a>
+        </div>
+    </main>
+    <div class="hole">
+        <div class="blob"></div>
+        <div class="black-hole"></div>
+    </div>
+</body>
+</html>
