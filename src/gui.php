@@ -1,5 +1,5 @@
 <?php
-function list_files($dir) {
+function list_files($dir): array {
     $folders = array();
     $files = array();
 
@@ -26,6 +26,25 @@ function list_files($dir) {
     // フォルダを先に、その後にファイルをリストする
     return array_merge($folders, $files);
 }
+
+function getFileInformation($filePath) {
+    if (file_exists($filePath)) {
+        return array(
+            'name' => basename($filePath),
+            'size' => filesize($filePath),
+            'modified' => date("F d Y H:i:s.", filemtime($filePath))
+        );
+    } else {
+        return null;
+    }
+}
+
+$current_dir = './';
+if (isset($_GET['dir']) && is_dir($_GET['dir'])) {
+    $current_dir = $_GET['dir'];
+}
+$items = list_files($current_dir);
+
 ?>
 
 <!DOCTYPE html>
@@ -48,6 +67,19 @@ function list_files($dir) {
             overflow-y: auto;
             background-color: #f0f0f0;
             padding: 10px;
+            box-sizing: border-box;
+        }
+
+        .viewer-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #file-info {
+            padding: 10px;
+            background-color: #dfdfdf;
+            border-bottom: 1px solid #ddd;
             box-sizing: border-box;
         }
 
@@ -128,14 +160,18 @@ function list_files($dir) {
 
             foreach ($items as $item) {
                 $style = $item['type'] == "folder" ? "font-weight: bold;" : "";
+                $filePath = $current_dir . '/' . $item['name'];
+                $fileInfo = $item['type'] != "folder" ? getFileInformation($filePath) : null;
+
                 if ($item['type'] == "folder") {
                     // フォルダの場合
-                    echo "<li onclick='viewDirectory(\"" . htmlspecialchars($current_dir . '/' . $item['name']) . "\")' style='" . $style . "'>" . htmlspecialchars($item['name']) . "</li>";
+                    echo "<li onclick='viewDirectory(\"" . htmlspecialchars($filePath) . "\")' style='" . $style . "'>" . htmlspecialchars($item['name']) . "</li>";
                 } else {
                     // ファイルの場合
-                    echo "<li onclick='viewFile(\"" . htmlspecialchars($current_dir . '/' . $item['name']) . "\")' style='" . $style . "'>" . htmlspecialchars($item['name']) . "</li>";
+                    echo "<li onclick='viewFile(\"" . htmlspecialchars($filePath) . "\")' style='" . $style . "' data-name='" . htmlspecialchars($fileInfo['name']) . "' data-size='" . $fileInfo['size'] . "' data-modified='" . $fileInfo['modified'] . "'>" . htmlspecialchars($item['name']) . "</li>";
                 }
             }
+
             echo "</ul>";
 
 
@@ -144,7 +180,14 @@ function list_files($dir) {
         }
         ?>
     </div>
-    <div id="file-viewer"></div>
+    <div class="viewer-container">
+        <div id="file-info">
+            <!-- ファイル情報が表示される -->
+        </div>
+        <div id="file-viewer">
+            <!-- ファイルビューアの内容 -->
+        </div>
+    </div>
     <script>
         function viewDirectory(dirPath) {
             window.location.href = '?dir=' + encodeURIComponent(dirPath);
@@ -163,11 +206,25 @@ function list_files($dir) {
     const archiveExtensions = ['zip', '7z', 'rar', 'tar', 'gz', 'bz2', 'tar.gz'];
     const audioExtensions = ['mp3', 'wav', 'ogg', 'flac', 'aac'];
 
-
     function viewFile(filename) {
         const viewer = document.getElementById('file-viewer');
         // ファイル拡張子を取得
         const fileExtension = filename.split('.').pop();
+
+        // ファイル名のみを取得（パスを除去）
+        const nameOnly = filename.split('/').pop();
+
+        console.log('Filename:', filename);
+        console.log('Name Only:', nameOnly);
+
+        let fileInfo = document.querySelector('li[data-name="' + nameOnly + '"]');
+        if (fileInfo) {
+            let fileDetails = 'Name: ' + fileInfo.getAttribute('data-name') + '<br>Size: ' + fileInfo.getAttribute('data-size') + ' bytes<br>Last Modified: ' + fileInfo.getAttribute('data-modified');
+            console.log('File Details:', fileDetails);
+            document.getElementById('file-info').innerHTML = fileDetails;
+        } else {
+            console.log('fileInfo is null');
+        }
 
         // html ファイルの場合、iframe を使用してそのまま表示
         if (fileExtension === 'html') {
